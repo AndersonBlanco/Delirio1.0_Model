@@ -4,11 +4,11 @@ Re-invented FiTech2.0 Model
 ### Data (traning + testing) organization: 
 train/test 
 |
-|------rest
-|       |-----good 
-|       |-----bad
-|
-|------jab
+|------rest \n
+|       |-----good\n 
+|       |-----bad\n
+|\n
+|------jab  
 |       |------good
 |       |------bad
 |
