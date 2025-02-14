@@ -1,4 +1,4 @@
-#helper functions 
+#helper functions for graphic purposes like drawing user skeleton and extracting angles from frames 
 
 import cv2
 import mediapipe as mp 
