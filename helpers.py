@@ -1,3 +1,5 @@
+#helper functions 
+
 import cv2
 import mediapipe as mp 
 import numpy as np
@@ -223,8 +225,8 @@ def drawSkeleton(frame):
 
 
 
-
-def test():
+#test mediapipe only
+def mediapipeTest():
     cap = cv2.VideoCapture(0)
     while True: 
         ret, frame = cap.read()
@@ -236,4 +238,5 @@ def test():
     cap.release()
     cv2.destroyAllWindows()
 
-test()
+ 
+
