@@ -3,6 +3,8 @@
 import cv2
 import mediapipe as mp 
 import numpy as np
+import os
+import tkinter
 
 mp_drawing = mp.solutions.drawing_utils 
 mp_pose = mp.solutions.pose 
@@ -31,6 +33,7 @@ def calculateAngle(p1, p2, p3):
         return angle 
 
 def drawSkeleton(frame):
+    #frame = cv2.flip(frame, 1)
     rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     h, w = frame.shape[0], frame.shape[1]
     res = pose.process(rgb)
@@ -124,15 +127,28 @@ def drawSkeleton(frame):
     #out.release()
 
     angles = [
-        rightElbow_angle,
-        rightShoulder_angle,
-        rightHip_angle,
-        rightKnee_angle,
-        leftElbow_angle,
+        rightElbow_angle, 
+        rightShoulder_angle, 
+        rightHip_angle, 
+        rightKnee_angle, 
+        leftElbow_angle, 
         leftShoulder_angle,
         leftHip_angle,
         leftKnee_angle
         ]
+    
+    anglesDictionary = { #right hemisphere limbs are maped to left hemishphere in order to solve the nuance of inverted cordinate values during processing
+           "rightElbow_angle": leftElbow_angle, 
+        "rightShoulder_angle": leftShoulder_angle,
+        "rightHip_angle": leftHip_angle,
+        "rightKnee_angle": leftKnee_angle ,
+
+        "leftElbow_angle": rightElbow_angle, 
+        "leftShoulder_angle": rightShoulder_angle,
+        "leftHip_angle": rightHip_angle,
+        "leftKnee_angle": rightKnee_angle,
+    }
+
     
     #evaluatios = jab_angle_conditions(angles)
 
@@ -150,17 +166,71 @@ def drawSkeleton(frame):
     leftLeg_color = (0, 255, 0)
 
 
+#Predictions HotFix 
+    userEvaluateAngleCorrectness = [[0,0], [0,0], [0,0]] #(left elbow/arm, right elbow/arm), (left knee/leg, right knee/leg), (left shoulder, right shoulder| 1 == incorrect, 0 = correct
 #elbows conditions - jab
-    if np.abs(rightElbow_angle - 30) > 7:
+    if np.abs(rightElbow_angle) not in validRanges["jab"]["leftElbow_angle"]: #right hemisphere limbs are maped to left hemishphere in order to solve the nuance of inverted cordinate values during processing
         rightArm_color = (0, 0, 255)
+        userEvaluateAngleCorrectness[0][0] = 1
     else:
         rightArm_color = (0, 255, 0)
+        userEvaluateAngleCorrectness[0][0] = 0
+ 
         
 
-    if np.abs(leftElbow_angle - 170) > 10:
+    if np.abs(leftElbow_angle) not in validRanges['jab']['rightElbow_angle']:#right hemisphere limbs are maped to left hemishphere in order to solve the nuance of inverted cordinate values during processing
         leftArm_color = (0, 0, 255)
+        userEvaluateAngleCorrectness[0][1] = 1
     else:
         leftArm_color = (0, 255, 0)
+        userEvaluateAngleCorrectness[0][1] = 0
+
+ 
+
+#knee conditions
+    if np.abs(rightKnee_angle) not in validRanges['jab']['leftKnee_angle']:#right hemisphere limbs are maped to left hemishphere in order to solve the nuance of inverted cordinate values during processing
+        rightLeg_color = (0, 0, 255)
+        userEvaluateAngleCorrectness[1][0] = 1
+    else:
+        rightLeg_color = (0, 255, 0)
+        userEvaluateAngleCorrectness[1][0] = 0
+
+
+    if np.abs(leftKnee_angle) not in validRanges['jab']['rightKnee_angle']:#right hemisphere limbs are maped to left hemishphere in order to solve the nuance of inverted cordinate values during processing
+        leftLeg_color = (0, 0, 255)
+        userEvaluateAngleCorrectness[1][1] = 1
+    else:
+        leftLeg_color = (0, 255, 0)
+        userEvaluateAngleCorrectness[1][1] = 0
+    
+
+
+#shoulders conditions
+    if np.abs(rightShoulder_angle) not in validRanges['jab']['leftShoulder_angle']:#right hemisphere limbs are maped to left hemishphere in order to solve the nuance of inverted cordinate values during processing
+        rightArm_color = (0, 0, 255)
+        userEvaluateAngleCorrectness[2][0] = 1
+    else:
+        rightArm_color = (0, 255, 0)
+        userEvaluateAngleCorrectness[2][0] = 0
+
+
+    if np.abs(leftShoulder_angle) not in validRanges['jab']['rightShoulder_angle']:#right hemisphere limbs are maped to left hemishphere in order to solve the nuance of inverted cordinate values during processing
+        leftArm_color = (0, 0, 255)
+        userEvaluateAngleCorrectness[2][1] = 1
+    else:
+        leftArm_color = (0, 255, 0)
+        userEvaluateAngleCorrectness[2][1] = 0
+
+
+  
+ 
+
+
+ 
+
+ 
+
+    
 
 #shoulders conditions - jab
 
@@ -175,8 +245,9 @@ def drawSkeleton(frame):
    #    leftArm_color = (0, 255, 0)
         
         
- 
+   
     #highlight right arm : 
+   
 
     newFrame = cv2.line(newFrame, (right_elbow_cords), (right_shoulder_cords), rightArm_color, 5)
     newFrame = cv2.line(newFrame, (right_wrist_cords), (right_elbow_cords), rightArm_color, 5)
@@ -202,7 +273,7 @@ def drawSkeleton(frame):
     #highlight left leg:
         
     newFrame = cv2.line(newFrame, (left_knee_cords), (left_hip_cords), leftLeg_color, 5)
-    newFrame = cv2.line(newFrame, (left_ankle_cords), (left_knee_cords), rightLeg_color, 5)
+    newFrame = cv2.line(newFrame, (left_ankle_cords), (left_knee_cords), leftLeg_color, 5)
 
     #add jab angles
     #jabStates.add(rightElbow_angle)# right elbow, for left elbow, because the joint were processed veversed in hemishphere of body!
@@ -221,18 +292,98 @@ def drawSkeleton(frame):
     #cv2.imshow('Feed', newFrame)
     #cv2.resize(newFrame,( 1000, 1000), cv2.INTER_AREA)
 
-    return angles, newFrame
+    return angles, newFrame, userEvaluateAngleCorrectness
+
+
+"""
+rightElbow_angle, -> idx 0
+rightShoulder_angle, -> idx 1
+rightHip_angle, -> idx 2
+rightKnee_angle, -> idx 3
+
+leftElbow_angle, 
+leftShoulder_angle,
+leftHip_angle,
+leftKnee_angle
+"""
+validRanges = {
+    "jab": { 
+        "rightElbow_angle": range(0, 55),
+        "rightShoulder_angle": range(0, 25),
+        "rightHip_angle": range(0,158),
+        "rightKnee_angle": range(90, 172) ,
+
+        "leftElbow_angle": range(150, 180), 
+        "leftShoulder_angle": range(87,115),
+        "leftHip_angle": range(0,360),
+        "leftKnee_angle": range(90, 172) ,
+    }
+}
+ 
+
+root = tkinter.Tk()
+monitorResolution = (root.winfo_screenheight()+100, root.winfo_screenheight()-200) 
+
+def label(correctNessValues, frame): #jab oriented for now, no other movement supported
+    #correctNessValues -->  (left elbow/arm, right elbow/arm), (left knee/leg, right knee/leg) | 1 == incorrect, 0 = correct
+    newFrame = frame
+
+    #arms
+    if  correctNessValues[0][0]:
+        newFrame = cv2.putText(frame, "jab extension", (50,50), cv2.FONT_HERSHEY_COMPLEX, 1.25, (0,0,255))
+        #print("Extend your jab more")
+
+    if  correctNessValues[0][1]:
+        newFrame = cv2.putText(frame, "guard down", (50,100), cv2.FONT_HERSHEY_COMPLEX, 1.25, (0,0,255))
+        print("Bring right arm closer to jaw, dont let your guard down")
+
+
+    #legs
+    if  correctNessValues[1][0]:
+        newFrame = cv2.putText(frame, "left knee", (50,150), cv2.FONT_HERSHEY_COMPLEX, 1.25, (0,0,255))
+        print("Bend your left knee more")
+
+    if  correctNessValues[1][1]:
+        newFrame = cv2.putText(frame, "rigtht knee", (50,200), cv2.FONT_HERSHEY_COMPLEX, 1.25, (0,0,255))
+        print("Bend your right knee more")
+
+
+    #shoulders
+    if  correctNessValues[2][0]:
+        newFrame = cv2.putText(frame, "left shoulder", (50,250), cv2.FONT_HERSHEY_COMPLEX, 1.25, (0,0,255))
+        print("Keep your upper arm raised to eye level")
+
+
+    if  correctNessValues[2][1]:
+        newFrame = cv2.putText(frame, "right shoulder", (50,270), cv2.FONT_HERSHEY_COMPLEX, 1.25, (0,0,255))
+        print("Keep your right elbows near your hips")
+
+
+    return newFrame
+
+
+
+
+        
+        
 
 
 
 #test mediapipe only
 def mediapipeTest():
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
     while True: 
         ret, frame = cap.read()
-        angles, newFrame = drawSkeleton(frame)
+        frame = cv2.resize(frame, monitorResolution)
 
-        cv2.imshow("Feed", newFrame)
+        try:
+            angles, newFrame, userEvaluateAngleCorrectness = drawSkeleton(cv2.flip(frame,1))
+            cv2.imshow("Feed", label(userEvaluateAngleCorrectness, newFrame))
+        except Exception as e:
+            print(e)
+            cv2.imshow("Feed", frame)
+
+
         if cv2.waitKey(1) == ord("q"): 
             break
     cap.release()
@@ -240,3 +391,4 @@ def mediapipeTest():
 
  
 
+mediapipeTest()
