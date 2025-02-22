@@ -5,6 +5,9 @@ import mediapipe as mp
 import numpy as np
 import os
 import tkinter
+from keras._tf_keras.keras.callbacks import ModelCheckpoint
+import keras 
+from model import mmy_odel
 
 mp_drawing = mp.solutions.drawing_utils 
 mp_pose = mp.solutions.pose 
@@ -366,19 +369,39 @@ def label(correctNessValues, frame): #jab oriented for now, no other movement su
 
         
         
-
-
+#model = keras.saving.load_model("model.h5")
 
 #test mediapipe only
 def mediapipeTest():
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
+    count = 0 
+    data = []
     while True: 
         ret, frame = cap.read()
         frame = cv2.resize(frame, monitorResolution)
 
         try:
+            #print(count)
             angles, newFrame, userEvaluateAngleCorrectness = drawSkeleton(cv2.flip(frame,1))
-            cv2.imshow("Feed", label(userEvaluateAngleCorrectness, newFrame))
+            count += 1
+            #newFrame = label(userEvaluateAngleCorrectness, newFrame)
+            cv2.imshow("Feed", newFrame)
+            if count < 40: 
+                data.append(angles)
+            elif count == 41: 
+                try: 
+                    p = mmy_odel.predict(data)
+                    print("Predicitng")
+                    print("Prediction: ", p)
+                except Exception as e: 
+                    print(e)
+            else:
+                data = []
+                count = 0
+
+        
+            #print(np.array(data).shape) 
+            
         except Exception as e:
             print(e)
             cv2.imshow("Feed", frame)
