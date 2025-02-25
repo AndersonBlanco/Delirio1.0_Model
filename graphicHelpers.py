@@ -369,10 +369,11 @@ def label(correctNessValues, frame): #jab oriented for now, no other movement su
 
         
         
-#model = keras.saving.load_model("model.h5")
 
 #test mediapipe only
 def mediapipeTest():
+    model = keras.saving.load_model("model.h5")
+
     cap = cv2.VideoCapture(0)
     count = 0 
     data = []
@@ -414,4 +415,4 @@ def mediapipeTest():
 
  
 
-mediapipeTest()
+#mediapipeTest()

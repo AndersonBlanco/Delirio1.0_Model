@@ -15,7 +15,7 @@ def getX_getY(path, label):
     x = np.array([])
     y = np.array([])
     count = 0 
-    paths = []
+
  
     for video_folder in os.listdir(path):
         y = np.append(y, label) 
@@ -30,7 +30,7 @@ def getX_getY(path, label):
                 print(Exception) 
 
 
-    x.resize((1, 40, 8))
+    #x.resize((1, 40, 8))
     y.resize((1, 8 , 2)) #one set per every 40 set of angles  
     #40 sets of 8 elements (8 differernt states), of elements (punch type true or false: 0 for false 1 for true, quality = 0 for bad, 1 for good)
     return x, y
@@ -71,7 +71,8 @@ def trainModel():
     print('Y shape: ', y.shape)
 
     try: 
-        mmy_odel.fit(x, y, epochs=10)
+        #mmy_odel.fit(x, y, epochs=10)
+        None
     except Exception as e: 
         print(e)
     mmy_odel.save('model.h5')
