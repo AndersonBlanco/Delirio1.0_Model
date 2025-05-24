@@ -295,7 +295,8 @@ def drawSkeleton(frame):
     #cv2.imshow('Feed', newFrame)
     #cv2.resize(newFrame,( 1000, 1000), cv2.INTER_AREA)
 
-    return angles, newFrame, userEvaluateAngleCorrectness
+    #userEvaluateAngleCorrectness
+    return angles, newFrame
 
 
 """

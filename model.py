@@ -24,14 +24,28 @@ callbacks = [
 ]
 
 def getX_getY(path, label):
-    x = []
+    xp = []
     y = []
     counter = 0
 
     for vid_folders in os.listdir(path):
+        print(vid_folders)
         counter +=1
         y.append(label)
 
+        data = np.load(path + "/" + vid_folders)
+        print(data)
+
+        x  = []
+        for i in range(40):
+            temp = []
+            for j in range(8):
+                temp.append(data[i][j]/180)
+            x.append(temp)
+        
+        xp.append(x)
+
+        """
         for angles in os.listdir(path + '/' + vid_folders):
             data = np.load( (path + '/' + vid_folders +'/' + str(angles)) )
 
@@ -42,11 +56,14 @@ def getX_getY(path, label):
             for i in range(8):
                 temp.append(data[i]/180)
             x.append(np.array(temp))
+        """
             
-    xp= np.array(x)
+    xp= np.array(xp)
     yp = np.array(y)
 
+    
     xp.resize(counter,40, 8)
+    print("X SHAPE:", xp.shape)
     return xp, yp
 
 
@@ -60,13 +77,14 @@ mmy_odel = keras.Sequential([
     keras.layers.GRU(128, return_sequences=False),
     keras.layers.Dense(64, activation='relu'),
     keras.layers.Dropout(0.3),
-    keras.layers.Dense(10, activation='softmax')
+    keras.layers.Dense(8, activation='softmax')
 ])
 
 
 mmy_odel.compile(optimizer="adam", loss=keras.losses.CategoricalCrossentropy(), metrics=['accuracy'])
 
 print(mmy_odel.summary())
+
 
 
 #labels hit-encodings: 
@@ -83,7 +101,7 @@ print(mmy_odel.summary())
  
 def trainModel():
     print("TRAINING!!!")
-    xgj, ygj = getX_getY(path="./Data/past/jab/good/angles", label= 0)
+    """xgj, ygj = getX_getY(path="./Data/past/jab/good/angles", label= 0)
     print('X size: ', xgj.shape)
     print('Y shape: ', ygj.shape)
 
@@ -98,48 +116,54 @@ def trainModel():
     xgu, ygu = getX_getY(path="./Data/past/uppercut/good/angles", label= 3)
     print("4")
 
-    xbu, ybu = getX_getY(path="./Data/past/uppercut/bad/angles/upper_knee_lvl_lack", label= 4)
+    xbu2, ybu2 = getX_getY(path="./Data/past/uppercut/bad/angles/upper_rotation_lack", label= 4)
     print("5")
 
 
-    xbu2, ybu2 = getX_getY(path="./Data/past/uppercut/bad/angles/upper_rotation_lack", label= 5)
+    xgr, ygr = getX_getY(path="./Data/past/rest/good/angles", label= 5)
     print("6")
 
 
-    xgr, ygr = getX_getY(path="./Data/past/rest/good/angles", label= 6)
+    xbr, ybr = getX_getY(path="./Data/past/rest/bad/angles", label= 6)
     print("7")
 
 
-    xbr, ybr = getX_getY(path="./Data/past/rest/bad/angles", label= 7)
+    xgs, ygs = getX_getY(path="./Data/past/straight_right/good/angles", label= 7)
     print("8")
 
+    xbs, ybs = getX_getY(path="./Data/past/straight_right/bad/angles/straight_defence_lack", label= 8)
+    print("bad straight: ", ybs)"""
 
-    xgs, ygs = getX_getY(path="./Data/past/straight_right/good/angles", label= 8)
-    print("9")
+    xgj, ygj = getX_getY(path="./newdata/jab/good", label = 0)
+    xbj, ybj = getX_getY(path="./newdata/jab/bad", label = 1)
+    xgs, ygs = getX_getY(path="./newdata/straightRight/good", label = 2)
+    xbs, ybs = getX_getY(path="./newdata/straightRight/bad", label = 3)
+    xgr, ygr = getX_getY(path="./newdata/rest/good", label = 4)
+    xbr, ybr = getX_getY(path="./newdata/rest/bad", label = 5)
+    xgk, ygk = getX_getY(path="./newdata/kick/good", label = 6)
+    xbk, ybk = getX_getY(path="./newdata/kick/bad", label = 7)
 
 
-
-    xbs, ybs = getX_getY(path="./Data/past/straight_right/bad/angles/straight_defence_lack", label= 9)
-    print("10")
-
-
-    
+    data = np.concatenate((xgj, xbj, xgr, xbr, xgs, xbs, xgk, xbk), axis = 0)
+    labels = np.concatenate((ygj, ybj, ygr, ybr, ygs, ybs, ygk, ybk), axis = 0)
 
 
+    #data = np.concatenate((xgj, xbj, xbj2, xgu, xbu2, xgr, xbr, xgs, xbs), axis = 0)
+    #labels = np.concatenate((ygj, ybj, ybj2, ygu, ybu2, ygr, ybr, ygs, ybs), axis = 0)
+    labels = to_categorical(labels)
+    #print(labels)
 
-    data = np.concatenate((xgj, xbj, xbj2, xgu, xbu, xbu2, xgr, xbr, xgs, xbs), axis = 0)
-    labels = np.concatenate((ygj, ybj, ybj2, ygu, ybu, ybu2, ygr, ybr, ygs, ybs), axis = 0)
+    x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.1, random_state=41)
 
-    x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.1, random_state=42)
-
-    y_train = to_categorical(y_train, num_classes=10)
-    y_test = to_categorical(y_test, num_classes=10)
-    print(y_test)
+    #print(y_test)
 
     mmy_odel.fit(x_train, y_train, epochs=50, batch_size=16, callbacks=callbacks)
 
     print("done fiting, lets test!")
+    print("test data: ", x_test)
+    print("test label data", y_test)
 
+    #mmy_odel.evaluate
     y_pred = mmy_odel.predict(x_test)
 
     y_pred_labels = np.argmax(y_pred, axis=1)
@@ -151,9 +175,15 @@ def trainModel():
     print(f"Accuracy: {accuracy}")
     print(f"Classification Report:\n{report}")
 
-    mmy_odel.save_weights('./model_storage/GRU1_weight.weights.h5')
-    mmy_odel.save('GRU1.keras')
+    mmy_odel.save_weights('./model_storage/GRU2_weight.weights.h5')
+    mmy_odel.save('GRU2.keras')
 
+
+    #testing if saved model works properly 
+    GRU1 = tf.keras.models.load_model('GRU2.keras')
+
+    loss, acc = GRU1.evaluate(x_test, y_test, verbose=2)
+    print('Restored model, accuracy: {:5.2f}%'.format(100 * acc))
 
 
 trainModel()

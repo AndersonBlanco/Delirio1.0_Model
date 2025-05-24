@@ -55,35 +55,36 @@ def extractFromMany(videosPath):
 
 
 #extract_from_video("./Data/past/jab/vids/video_1.avi", 40)
-extractFromMany("./Data/past/jab/vids")
+#extractFromMany("./Data/past/jab/vids")
 
 def pasteText(text, frame, cords):
     return cv2.putText(frame, text, cords, cv2.FONT_HERSHEY_COMPLEX, 0.9, (255,255,0), 2)
 
+step = 50
 def live_extract(num_0f_sets, num_of_frames):
     allAngles = []
     cap = cv2.VideoCapture(0)
     for x in range(num_0f_sets):
-        print(f"Data extraction {x} will start in 2 seconds.....")
-        cv2.waitKey(2000)
+        print(f"Data extraction {x+step} will start in 2 seconds.....")
+        cv2.waitKey(1000)
         winsound.Beep(2000, 500)
-        print("Video: ", x)
+        print("Video: ", x+step)
         for y in range(num_of_frames):
             ret, frame = cap.read()
             angles, newFrame = drawSkeleton(frame)
             allAngles.append(angles) 
 
-            newFrame = pasteText(f"Video: {x}", newFrame, (50,50))
+            newFrame = pasteText(f"Video: {x+step}", newFrame, (50,50))
             cv2.imshow("Feed", newFrame)
             if cv2.waitKey(1) == ord("q"): 
                 break
         winsound.Beep(1000, 500) 
-        np.save(f"set_{x}.npy", allAngles)
-        np.savetxt(f"set_txt_{x}.txt", allAngles)
-        print(f"Data extraction {x} ended")
+        np.save(f"./newdata/kick/bad/set_{x+step}.npy", allAngles)
+        #np.savetxt(f"set_txt_{x}.txt", allAngles)
+        print(f"Data extraction {x+step} ended")
 
     cap.release()
     cv2.destroyAllWindows()
  
 
-#live_extract(2,40)
+live_extract(50,40)

@@ -10,68 +10,75 @@ import numpy as np
 import cv2 
 import winsound
 from vision import drawSkeleton
+import tkinter
 
-GRU1 = tf.keras.models.load_model('GRU1.keras')
+
+GRU1 = tf.keras.models.load_model('GRU2.keras')
+
+root = tkinter.Tk()
+monitorResolution = (root.winfo_screenheight()+100, root.winfo_screenheight()-200) 
 
 num_videos = 1
 cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 2040)  # set camera as wide as possible
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+#cap.set(cv2.CAP_PROP_FRAME_WIDTH, 2040)  # set camera as wide as possible
+#cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
 
 
 
-val_to_pred = ["good jab", "bad jab - knee level lack", "bad jab - rotation lack",
-               "good uppercut", "bad uppercut - knee level lack", "bad uppercut - rotation lack",
-               "good resting", "bad resting", "good straight", "bad straight - lack of defence"]
+"""val_to_pred = ["good jab", "bad jab - knee level lack", "bad jab - rotation lack",
+               "good uppercut", "bad uppercut - rotation lack",
+               "good resting", "bad resting", "good straight", "bad straight - lack of defence"]"""
+
+val_pred = ["good jab", "bad jab - knee level lack", 
+            "good straight", "bad straight, lack of rotation"," good rest", "bad rest, wrong stance",
+            "good kick", "bad kick, don't lounge leg out"]
 
 def label(angles):
     pred_y = np.array(GRU1.predict(angles))
+    print("ANGLES:", angles)
+    print("PREDICTION: ", pred_y)
     idx = pred_y[0].argmax(axis = 0)
 
-    return val_to_pred[idx]
+    return val_pred[idx]
 
 
-f = 0
+
+
+counter = 0
 a = []
-p = "Put whole body into frame"
+statement = "Put whole body into frame"
 while True:
     ret, frame = cap.read()
-
-
+    frame = cv2.resize(frame, monitorResolution)
     if not ret:
         print("Can't receive frame (stream end?). Exiting ...")
         break
 
-
     try:
-        angles, newFrame = drawSkeleton(frame)
-        if f != 40:
-            f += 1
-            a.append(angles)
+        angles, frame = drawSkeleton(frame)
+        if counter == 40:
+            counter = 0
+            numpy_a = np.array(a)
+            print("BOTTOM SECTION: ", numpy_a)
+            numpy_a.resize(1,40,8)
+            print("BOTTOM SECTION: ", numpy_a)
+            statement = label(numpy_a)
+            a=[]
         else:
-            winsound.Beep(1000,500)
-            a = np.array(a)
-            a.resize(1,40,8)
-            try:
-                p = label(a)
-                print(p)
-            except:
-                print("Try again")
-                p = "Try again"
-
-            
-            a = []
-            f = 0
-            
-        cv2.putText(frame, p, (200,100), cv2.FONT_HERSHEY_DUPLEX, 3, (0,0,0), 2, cv2.LINE_AA)
-
-        cv2.imshow('frame', newFrame)
+            frame = cv2.circle(frame, (300,300), 40, (0,0,255), -1)
+            for i in range(8):
+                angles[i] = angles[i]/180
+            a.append(angles)
+            counter += 1
     except:
-        cv2.rectangle(frame, (200, 200), (1000, 200), (255,255,255), -1) 
-        cv2.putText(frame, "Put whole body into frame", (10,10), cv2.FONT_HERSHEY_DUPLEX, 2, (11,16,36), 2, cv2.LINE_AA)
+        counter = 0
+        a=[]
+        statement = "Put body in frame"
 
 
+    cv2.putText(frame, statement, (50,50), cv2.FONT_HERSHEY_DUPLEX, 4, (0,0,0), 4 ,cv2.LINE_AA)
+    cv2.imshow('frame', frame)
 
     if cv2.waitKey(1) == ord('q'):
         break
