@@ -13,7 +13,7 @@ from vision import drawSkeleton
 import tkinter
 
 
-GRU1 = tf.keras.models.load_model('GRU2.keras')
+GRU1 = tf.keras.models.load_model("./ChainedGRU_Arch/punchClassification.keras")#('GRU2.keras')
 
 root = tkinter.Tk()
 monitorResolution = (root.winfo_screenheight()+100, root.winfo_screenheight()-200) 
@@ -34,10 +34,23 @@ val_pred = ["good jab", "bad jab - knee level lack",
             "good straight", "bad straight, lack of rotation"," good rest", "bad rest, wrong stance",
             "good kick", "bad kick, don't lounge leg out"]
 
+val_punchClassification_labels = ['jab', 'straightRight', 'upperCut', 'hook', 'rest']
+
+def label_punchClassification(angles):
+    pred_y = np.array(GRU1.predict(angles))
+    #print("ANGLES:", angles)
+    #print("PREDICTION: ", pred_y)
+    idx = pred_y[0].argmax(axis = 0)
+    p = val_punchClassification_labels[idx]
+    print("Prediciton label: ", p)
+    print("Raw prediction hot-on eencoding: ", pred_y[0])
+    return p
+
+
 def label(angles):
     pred_y = np.array(GRU1.predict(angles))
-    print("ANGLES:", angles)
-    print("PREDICTION: ", pred_y)
+    #print("ANGLES:", angles)
+    #print("PREDICTION: ", pred_y)
     idx = pred_y[0].argmax(axis = 0)
 
     return val_pred[idx]
@@ -60,10 +73,10 @@ while True:
         if counter == 40:
             counter = 0
             numpy_a = np.array(a)
-            print("BOTTOM SECTION: ", numpy_a)
+            #print("BOTTOM SECTION: ", numpy_a)
             numpy_a.resize(1,40,8)
-            print("BOTTOM SECTION: ", numpy_a)
-            statement = label(numpy_a)
+            print("numpy_a shape: ", numpy_a.shape)
+            statement = label_punchClassification(numpy_a)
             a=[]
         else:
             frame = cv2.circle(frame, (300,300), 40, (0,0,255), -1)
