@@ -108,12 +108,13 @@ print("Y straightRight bad shape: ", y_straightRight_bad.shape)
 
 def convertModel(model):
     try:
-        m = crml.convert(model,)
-        m.save("./punchClassification_coreml.mlmodel")
+        m = crml.convert(model, source = "tensorflow")
+        m.save("./punchClassification_coreml.mlpackage")
+        print('model saved!!')
         return m
-    except(Exception):
-        print(Exception)
-        return Exception 
+    except Exception as e:
+        print(e)
+        return e 
     
 
 
@@ -153,6 +154,11 @@ def fit_and_test_bare_model(x_train,y_train, x_test, y_test):
     punchCalssification_model.save("./punchClassification.keras")
     punchCalssification_model.save_weights("./punchClassification.weights.h5")
     print('model saved....')
+
+
+    print('converting to coreml model file..')
+    crmlModel = convertModel(punchCalssification_model)
+    print('coreml model file converted')
 
 x_jabs = np.add(x_jabs_good, x_jabs_bad)
 y_jabs = np.add(y_jabs_good, y_jabs_bad)
