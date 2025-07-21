@@ -142,7 +142,8 @@ video_punch_types = ['good', 'bad/low_guard','bad/curved_back', 'good', 'bad/lac
 
 #caution: 
 #IMG_3467.MOV and IMG_3468.MOV seem to be both straight_right punct title and of same quality (good)
-def save_data_to_directory(video_title, save_data_to_directory):
+def save_data_to_directory(video_title, base_path, punch_title, punch_type):
+    save_data_to_directory = base_path + punch_title + '/' + punch_type
     try:
 
         right_hemi_40set, left_hemi_40set = init_capture_window(video_title)
@@ -157,18 +158,20 @@ def save_data_to_directory(video_title, save_data_to_directory):
     
         print('Final cv2 angle extraction results (rigt hemi): ', np.array(a).shape, len(a))
         print('Final cv2 angle extraction results (left hemi): ', np.array(b).shape, len(b))
-        if not os.path.exists(save_data_to_directory): 
+
+        if not os.path.exists(base_path + punch_title):
+            os.mkdir(base_path+punch_title)
             os.mkdir(save_data_to_directory)
 
         last_i = 0
         for i in range(min([len(a), len(b)])):
-            a_file_path=f"{save_data_to_directory}a{i}.npy"
+            a_file_path=f"{save_data_to_directory}/a{i}.npy"
             np.save(a_file_path, a[i])
             last_i+=1
            
 
         for x in range(min([len(a), len(b)]), 2*min([len(a), len(b)])):
-            b_file_path=f"{save_data_to_directory}a{x}.npy"
+            b_file_path=f"{save_data_to_directory}/a{x}.npy"
             np.save(b_file_path, b[x - min([len(a), len(b)]) ])
 
 
@@ -184,4 +187,4 @@ for x in range(len(videos_titles)):
     full_dir = (f"./july_20_2025_trainingVids/{videos_titles[x]}")
     punch_title = video_punch_titles[x]
     punch_type = video_punch_types[x]
-    save_data_to_directory(videos_titles[x], f"./jul_20_2025_dataExtract/{punch_title}/{punch_type}/")
+    save_data_to_directory(videos_titles[x], f"./jul_20_2025_dataExtract/", punch_title, punch_type)
