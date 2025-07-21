@@ -160,8 +160,7 @@ def save_data_to_directory(video_title, base_path, punch_title, punch_type):
         print('Final cv2 angle extraction results (left hemi): ', np.array(b).shape, len(b))
 
         if not os.path.exists(base_path + punch_title):
-            os.mkdir(base_path+punch_title)
-            os.mkdir(save_data_to_directory)
+            os.makedirs(save_data_to_directory)
 
         last_i = 0
         for i in range(min([len(a), len(b)])):
