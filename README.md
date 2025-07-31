@@ -1,4 +1,4 @@
-# FiTech2.0_Model
+# Delirio1.0_Model
 Re-invented FiTech2.0 Model
 
 Data extraction repo:
